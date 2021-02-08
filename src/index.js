@@ -1,4 +1,7 @@
 import {} from 'dotenv/config'
+// import fs from 'fs'
+// import path from 'path'
+import chrome from 'chrome-aws-lambda'
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import express from 'express'
@@ -6,6 +9,29 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import cron from 'node-schedule'
 import TelegramBot from 'node-telegram-bot-api'
+
+/*
+const evasions = [
+  'chrome.runtime',
+  'navigator.plugins',
+  'console.debug',
+  'navigator.webdriver',
+  'webgl.vendor',
+  'navigator.languages',
+  'window.outerdimensions',
+  'navigator.permissions'
+]
+
+for (const evasion of evasions) {
+  const evasionIndex = path.join(
+    __dirname,
+    `../node_modules/puppeteer-extra-plugin-stealth/evasions/${evasion}/index.js`
+  )
+  fs.readFile(evasionIndex, err => {
+    if (err) console.error('error', err)
+  })
+}
+*/
 
 /**
  * SCRAPPING
@@ -31,7 +57,12 @@ const cityMovies = {}
 let premieres = []
 
 async function scrapePremieres() {
-  const browser = await puppeteer.launch({ headless: true })
+  const browser = await puppeteer.launch({
+    args: chrome.args,
+    executablePath: await chrome.executablePath,
+    headless: true,
+    timeout: 0
+  })
   const page = await browser.newPage()
   let result = []
 
@@ -74,14 +105,19 @@ async function scrapePremieres() {
 }
 
 async function scrapeMovies([head, ...tail], defBrowser) {
-  // console.info(`SECRAPING ${head}...`)
-  const browser = !defBrowser ? await puppeteer.launch({ headless: true }) : defBrowser
+  const browser = !defBrowser
+    ? await puppeteer.launch({
+        args: chrome.args,
+        executablePath: await chrome.executablePath,
+        headless: true,
+        timeout: 0
+      })
+    : defBrowser
   const page = await browser.newPage()
   let result = {}
 
   try {
     await page.goto(`https://www.cinesunidos.com/Cines/${head}`, { timeout: 0, waitUntil: 'load' })
-    // await page.waitFor(3000)
 
     result = await page.evaluate(async () => {
       const theaters = []
@@ -106,8 +142,6 @@ async function scrapeMovies([head, ...tail], defBrowser) {
         for (const day of dayElements) {
           day.click()
           await new Promise(resolve => setTimeout(resolve, 500))
-          // const peliText = document.getElementsByClassName('peli')[1].innerText
-          // if (peliText === 'No Hay Funciones') continue
 
           const moviesElements = document
             .getElementById(`M_${theaterId}`)
@@ -201,11 +235,15 @@ async function scrapeMovies([head, ...tail], defBrowser) {
 }
 
 async function startScraping() {
-  await scrapePremieres().then(value => {
-    premieres = value
-  })
+  try {
+    await scrapePremieres().then(value => {
+      premieres = value
+    })
 
-  await scrapeMovies(CITIES)
+    await scrapeMovies(CITIES)
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 startScraping()
