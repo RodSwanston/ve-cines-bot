@@ -32,8 +32,11 @@
     "semi": "off",
     "no-useless-escape": "off",
     "array-callback-return": "off",
-    "prettier/prettier": ["error"],
-    "no-console": ["error", { "allow": ["info", "warn", "error", "group", "groupEnd"] }],
+    "prettier/prettier": ["error", { "trailingComma": "none" }],
+    "no-console": [
+      "error",
+      { "allow": ["info", "warn", "error", "group", "groupEnd"] }
+    ],
     "import/prefer-default-export": "off",
     "comma-dangle": ["error", "never"]
   }
