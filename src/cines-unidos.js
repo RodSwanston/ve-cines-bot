@@ -1,6 +1,8 @@
+import axios from 'axios'
 import chrome from 'chrome-aws-lambda'
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
+
 import { log } from './lib/utils'
 
 puppeteer.use(StealthPlugin())
@@ -215,6 +217,35 @@ export async function startScrapingCU() {
     console.info('/***************/')
     console.info('/***************/')
     log(cityMovies)
+
+    /*
+     const { data } = await axios.post(
+        process.env.HASURA_API,
+        {
+          query: `
+            mutation NEW_ORG($name: String!) {
+              insert_organization_one(object: {
+                name: $name
+              }) {
+                id
+                name
+              }
+            }
+          `,
+          variables: {
+            name: 'Cines Unidos'
+          }
+        },
+        {
+          headers: {
+            'x-hasura-admin-secret': process.env.HASURA_SECRET
+          }
+        }
+      )
+
+      console.log(data)
+      console.log(data.erros)
+    */
   } catch (error) {
     console.error(error)
   }
